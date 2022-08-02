@@ -277,44 +277,19 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         """Returns True if we can start a preemptible trial.
         |preemptible_starts| is the number of preemptibles we've already
         started."""
-        if not self.experiment_config.get('preemptible_runners'):
-            # This code shouldn't be executed in a non preemptible experiment.
-            # But just in case it is, it's not OK to create a preemptible trial
-            # in a non-preemptible experiment.
-            return False
-
-        if self.preemptible_window_passed():
-            # Don't keep creating preemptible instances forever. Don't create
-            # them if the experiment has already taken a certain amount of time
-            # longer than the equivalent nonpreemptible experiment.
-            # *NOTE*: preemptible_window_passed is slightly broken. When
-            # the measurer uses this method it may produce slightly different
-            # results than the scheduler because the initial trials may be
-            # different. This is unlikely to happen in the real world. It is
-            # probably benign as well because the measurer may think the window
-            # end is slightly later than the scheduler. The effect of this will
-            # simply be that the measurer may measure for slightly longer than
-            # needed.
-            return False
-
-        # Otherwise, it's fine to create a preemptible instance.
-        return True
+        return (
+            not self.preemptible_window_passed()
+            if self.experiment_config.get('preemptible_runners')
+            else False
+        )
 
     def can_start_nonpreemptible(self, nonpreemptible_starts: int) -> bool:
         """Returns True if we can start a nonpreemptible trial."""
-        if not self.experiment_config.get('preemptible_runners'):
-            # This code shouldn't be executed in a preemptible experiment.
-            # But just in case it is, it's not always OK to a non-preemptible
-            # trial in a non-preemptible experiment.
-            return True
-
-        if nonpreemptible_starts >= self.max_nonpreemptibles:
-            # Don't exceed the maximum number of nonpreemptibles.
-            return False
-
-        # Supplement with nonpreemptibles if the experiment results are not so
-        # messed up that doing so won't make the result useable.
-        return True
+        return (
+            nonpreemptible_starts < self.max_nonpreemptibles
+            if self.experiment_config.get('preemptible_runners')
+            else True
+        )
 
     def get_nonpreemptible_starts(self) -> int:
         """Returns the count of nonpreemptible trials that have been started."""
@@ -524,8 +499,7 @@ def schedule(experiment_config: dict, pool):
 
     # Start pending trials.
     pending_trials = list(get_pending_trials(experiment_config['experiment']))
-    started_trials = start_trials(pending_trials, experiment_config, pool)
-    return started_trials
+    return start_trials(pending_trials, experiment_config, pool)
 
 
 def schedule_loop(experiment_config: dict):
@@ -652,9 +626,13 @@ def _start_trial(trial: TrialProxy, experiment_config: dict):
     # that calls this function completely terminates.
     _initialize_logs(experiment_config['experiment'])
     logger.info('Start trial %d.', trial.id)
-    started = create_trial_instance(trial.fuzzer, trial.benchmark, trial.id,
-                                    experiment_config, trial.preemptible)
-    if started:
+    if started := create_trial_instance(
+        trial.fuzzer,
+        trial.benchmark,
+        trial.id,
+        experiment_config,
+        trial.preemptible,
+    ):
         trial.time_started = datetime_now()
         return trial
     logger.info('Trial: %d not started.', trial.id)
@@ -707,7 +685,7 @@ def create_trial_instance(fuzzer: str, benchmark: str, trial_id: int,
     startup_script = render_startup_script_template(instance_name, fuzzer,
                                                     benchmark, trial_id,
                                                     experiment_config)
-    startup_script_path = '/tmp/%s-start-docker.sh' % instance_name
+    startup_script_path = f'/tmp/{instance_name}-start-docker.sh'
     with open(startup_script_path, 'w') as file_handle:
         file_handle.write(startup_script)
 
@@ -726,7 +704,7 @@ def main():
     })
 
     if len(sys.argv) != 2:
-        print('Usage: {} <experiment_config.yaml>'.format(sys.argv[0]))
+        print(f'Usage: {sys.argv[0]} <experiment_config.yaml>')
         return 1
 
     experiment_config = yaml_utils.read(sys.argv[1])

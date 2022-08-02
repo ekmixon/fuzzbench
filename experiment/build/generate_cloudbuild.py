@@ -41,7 +41,7 @@ def _get_image_tag(image_specs,
 
     tag = posixpath.join(registry, image_specs['tag'])
     if tag_by_experiment:
-        tag += ':' + experiment_utils.get_experiment_name()
+        tag += f':{experiment_utils.get_experiment_name()}'
     return tag
 
 
@@ -85,29 +85,38 @@ def coverage_steps(benchmark):
     """Returns GCB run steps for coverage builds."""
     coverage_binaries_dir = exp_path.filestore(
         build_utils.get_coverage_binaries_dir())
-    steps = [{
-        'name':
-            DOCKER_IMAGE,
-        'args': [
-            'run',
-            '-v',
-            '/workspace/out:/host-out',
-            # TODO(metzman): Get rid of this and use one source of truth
-            # for tags.
-            posixpath.join(get_docker_registry(), 'builders', 'coverage',
-                           benchmark) + ':' +
-            experiment_utils.get_experiment_name(),
-            '/bin/bash',
-            '-c',
-            'cd /out; tar -czvf /host-out/coverage-build-' + benchmark +
-            '.tar.gz * /src /work'
-        ]
-    }]
-    step = {'name': 'gcr.io/cloud-builders/gsutil'}
-    step['args'] = [
-        '-m', 'cp', '/workspace/out/coverage-build-' + benchmark + '.tar.gz',
-        coverage_binaries_dir + '/'
+    steps = [
+        {
+            'name': DOCKER_IMAGE,
+            'args': [
+                'run',
+                '-v',
+                '/workspace/out:/host-out',
+                posixpath.join(
+                    get_docker_registry(), 'builders', 'coverage', benchmark
+                )
+                + ':'
+                + experiment_utils.get_experiment_name(),
+                '/bin/bash',
+                '-c',
+                (
+                    f'cd /out; tar -czvf /host-out/coverage-build-{benchmark}'
+                    + '.tar.gz * /src /work'
+                ),
+            ],
+        }
     ]
+
+    step = {
+        'name': 'gcr.io/cloud-builders/gsutil',
+        'args': [
+            '-m',
+            'cp',
+            f'/workspace/out/coverage-build-{benchmark}.tar.gz',
+            f'{coverage_binaries_dir}/',
+        ],
+    }
+
     steps.append(step)
     return steps
 
@@ -147,15 +156,21 @@ def create_cloudbuild_spec(image_templates,
             'id': image_name,
             'env': ['DOCKER_BUILDKIT=1'],
             'name': DOCKER_IMAGE,
+            'args': [
+                'build',
+                '--tag',
+                _get_experiment_image_tag(image_specs),
+                '--tag',
+                _get_gcb_image_tag(image_specs),
+                '--tag',
+                _get_cachable_image_tag(image_specs),
+                '--cache-from',
+                _get_cachable_image_tag(image_specs),
+                '--build-arg',
+                'BUILDKIT_INLINE_CACHE=1',
+            ],
         }
-        step['args'] = [
-            'build', '--tag',
-            _get_experiment_image_tag(image_specs), '--tag',
-            _get_gcb_image_tag(image_specs), '--tag',
-            _get_cachable_image_tag(image_specs), '--cache-from',
-            _get_cachable_image_tag(image_specs), '--build-arg',
-            'BUILDKIT_INLINE_CACHE=1'
-        ]
+
         for build_arg in image_specs.get('build_arg', []):
             step['args'] += ['--build-arg', build_arg]
 

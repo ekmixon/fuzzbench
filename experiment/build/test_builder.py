@@ -144,14 +144,12 @@ def get_all_benchmarks():
 
 def get_specified_fuzzers():
     """Returns fuzzers as specified in the environment."""
-    fuzzers = os.environ['TEST_BUILD_CHANGED_FUZZERS'].split(' ')
-    return fuzzers
+    return os.environ['TEST_BUILD_CHANGED_FUZZERS'].split(' ')
 
 
 def get_specified_benchmarks():
     """Returns benchmarks as specified in the environment."""
-    fuzzers = os.environ['TEST_BUILD_CHANGED_BENCHMARKS'].split(' ')
-    return fuzzers
+    return os.environ['TEST_BUILD_CHANGED_BENCHMARKS'].split(' ')
 
 
 # TODO(metzman): Fix failures caused by copying logs to GCS.

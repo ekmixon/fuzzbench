@@ -40,8 +40,16 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     # Run fuzzer on the benchmark.
     manul_directory = os.path.join(os.environ['OUT'], 'manul')
-    command = ([
-        'python3', 'manul.py', '-i', input_corpus, '-o', output_corpus, '-c',
-        os.path.join(manul_directory, 'manul_lin.config'), target_binary + ' @@'
-    ])
+    command = [
+        'python3',
+        'manul.py',
+        '-i',
+        input_corpus,
+        '-o',
+        output_corpus,
+        '-c',
+        os.path.join(manul_directory, 'manul_lin.config'),
+        f'{target_binary} @@',
+    ]
+
     subprocess.check_call(command, cwd=manul_directory)

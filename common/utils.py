@@ -63,9 +63,6 @@ def file_hash(file_path):
     chunk_size = 51200  # Read in 50 KB chunks.
     digest = hashlib.sha1()
     with open(file_path, 'rb') as file_handle:
-        chunk = file_handle.read(chunk_size)
-        while chunk:
+        while chunk := file_handle.read(chunk_size):
             digest.update(chunk)
-            chunk = file_handle.read(chunk_size)
-
     return digest.hexdigest()

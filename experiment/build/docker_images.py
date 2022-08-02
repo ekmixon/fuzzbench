@@ -44,8 +44,7 @@ def _get_image_type_templates():
     """Loads the image types config that contains "templates" describing how to
     build them and their dependencies."""
     yaml_file = os.path.join(ROOT_DIR, 'docker', 'image_types.yaml')
-    all_templates = yaml_utils.read(yaml_file)
-    return all_templates
+    return yaml_utils.read(yaml_file)
 
 
 def get_images_to_build(fuzzers, benchmarks):

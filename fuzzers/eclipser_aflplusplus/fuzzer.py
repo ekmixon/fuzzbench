@@ -41,10 +41,10 @@ def build():
     aflplusplus_fuzzer.build("qemu", "eclipser")
     eclipser_dir = get_uninstrumented_outdir(build_directory)
     os.mkdir(eclipser_dir)
-    fuzz_binary = build_directory + '/' + fuzz_target
+    fuzz_binary = f'{build_directory}/{fuzz_target}'
     shutil.copy(fuzz_binary, eclipser_dir)
-    if os.path.isdir(build_directory + '/seeds'):
-        shutil.rmtree(build_directory + '/seeds')
+    if os.path.isdir(f'{build_directory}/seeds'):
+        shutil.rmtree(f'{build_directory}/seeds')
 
     # Second, build an instrumented binary for AFL++.
     os.environ = orig_env

@@ -51,18 +51,14 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
             output_directory,
             plotter,
             experiment_name=None):
-        if experiment_name:
-            self.name = experiment_name
-        else:
-            # Take name from first row.
-            self.name = experiment_df.experiment.iloc[0]
-
+        self.name = experiment_name or experiment_df.experiment.iloc[0]
         # FuzzBench repo commit hash.
         self.git_hash = None
-        if 'git_hash' in experiment_df.columns:
-            # Not possible to represent hashes for multiple experiments.
-            if len(experiment_df.experiment.unique()) == 1:
-                self.git_hash = experiment_df.git_hash.iloc[0]
+        if (
+            'git_hash' in experiment_df.columns
+            and len(experiment_df.experiment.unique()) == 1
+        ):
+            self.git_hash = experiment_df.git_hash.iloc[0]
 
         # Earliest trial start time.
         self.started = experiment_df.time_started.dropna().min()
@@ -98,7 +94,7 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
             return (f'<a href="https://github.com/google/fuzzbench/blob/'
                     f'{commit}/fuzzers/{fuzzer}">{fuzzer}</a>')
 
-        commit = self.git_hash if self.git_hash else 'master'
+        commit = self.git_hash or 'master'
         df.index = df.index.map(lambda fuzzer: description_link(commit, fuzzer))
         return df
 
@@ -173,8 +169,8 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
 
         # Add rows for Median and Mean values
         nrows, _ = pivot.shape
-        pivot.loc['FuzzerMedian'] = pivot.iloc[0:nrows].median()
-        pivot.loc['FuzzerMean'] = pivot.iloc[0:nrows].mean()
+        pivot.loc['FuzzerMedian'] = pivot.iloc[:nrows].median()
+        pivot.loc['FuzzerMean'] = pivot.iloc[:nrows].mean()
         # Sort fuzzers left to right by FuzzerMean
         pivot = pivot.sort_values(by='FuzzerMean', axis=1, ascending=False)
 
@@ -186,11 +182,11 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
 
         whbl = sns.light_palette('lightblue', n_colors=30, as_cmap=True)
         pivot = pivot.style\
-                .background_gradient(axis=1, cmap=whbl, vmin=95, vmax=100)\
-                .highlight_max(axis=1, color='lightgreen')\
-                .format("{:.2f}")\
-                .apply(data_utils.underline_row, axis=1, subset=idx)\
-                .set_table_styles(self._SUMMARY_TABLE_STYLE)
+                    .background_gradient(axis=1, cmap=whbl, vmin=95, vmax=100)\
+                    .highlight_max(axis=1, color='lightgreen')\
+                    .format("{:.2f}")\
+                    .apply(data_utils.underline_row, axis=1, subset=idx)\
+                    .set_table_styles(self._SUMMARY_TABLE_STYLE)
         return pivot
 
     @property
@@ -223,7 +219,7 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
 
         # Add row for sum of all bugs found
         nrows, _ = pivot.shape
-        pivot.loc['FuzzerSum'] = pivot.iloc[0:nrows].sum()
+        pivot.loc['FuzzerSum'] = pivot.iloc[:nrows].sum()
 
         # Move Sum to top row
         row_index = pivot.index.to_list()
@@ -242,10 +238,10 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         # Sort fuzzers left to right by FuzzerSum
         pivot = pivot.sort_values(by='FuzzerSum', axis=1, ascending=False)
         pivot = pivot.style\
-                .format("{:.0f}")\
-                .apply(highlight_max, axis=1, subset=fuzzer_names)\
-                .apply(data_utils.underline_row, axis=1, subset=idx)\
-                .set_table_styles(self._SUMMARY_TABLE_STYLE)
+                    .format("{:.0f}")\
+                    .apply(highlight_max, axis=1, subset=fuzzer_names)\
+                    .apply(data_utils.underline_row, axis=1, subset=idx)\
+                    .set_table_styles(self._SUMMARY_TABLE_STYLE)
         return pivot
 
     @property

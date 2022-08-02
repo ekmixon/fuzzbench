@@ -35,10 +35,10 @@ def build():
     aflplusplus_fuzzer.build("qemu", "eclipser")
     qemu_dir = get_uninstrumented_outdir(build_directory)
     os.mkdir(qemu_dir)
-    fuzz_binary = build_directory + '/' + fuzz_target
+    fuzz_binary = f'{build_directory}/{fuzz_target}'
     shutil.copy(fuzz_binary, qemu_dir)
-    if os.path.isdir(build_directory + '/seeds'):
-        shutil.rmtree(build_directory + '/seeds')
+    if os.path.isdir(f'{build_directory}/seeds'):
+        shutil.rmtree(f'{build_directory}/seeds')
 
     aflplusplus_fuzzer.build("tracepc")
     shutil.copy('/afl/afl-fuzz', build_directory)

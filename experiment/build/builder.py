@@ -60,11 +60,9 @@ def get_fuzzer_benchmark_pairs(fuzzers, benchmarks):
     unsupported_fuzzer_benchmark_pairs = []
     for benchmark in benchmarks:
         config = benchmark_config.get_config(benchmark)
-        unsupported_fuzzers = config.get('unsupported_fuzzers')
-        if not unsupported_fuzzers:
-            continue
-        unsupported_fuzzer_benchmark_pairs += list(
-            itertools.product(unsupported_fuzzers, [benchmark]))
+        if unsupported_fuzzers := config.get('unsupported_fuzzers'):
+            unsupported_fuzzer_benchmark_pairs += list(
+                itertools.product(unsupported_fuzzers, [benchmark]))
 
     return [
         i for i in fuzzer_benchmark_pairs

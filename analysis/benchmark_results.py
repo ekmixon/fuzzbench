@@ -44,7 +44,7 @@ class BenchmarkResults:
         self._plotter = plotter
 
     def _prefix_with_benchmark(self, filename):
-        return self.name + '_' + filename
+        return f'{self.name}_{filename}'
 
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
@@ -57,8 +57,8 @@ class BenchmarkResults:
         """Returns the filestore name of the |fuzzer_name|."""
         filestore_path = self._get_experiment_filestore_path(fuzzer_name)
         gcs_prefix = 'gs://'
-        gcs_http_prefix = 'https://storage.googleapis.com/'
         if filestore_path.startswith(gcs_prefix):
+            gcs_http_prefix = 'https://storage.googleapis.com/'
             filestore_path = filestore_path.replace(gcs_prefix, gcs_http_prefix)
         return filestore_path
 

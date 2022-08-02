@@ -70,12 +70,12 @@ class TestEndToEndRunResults:
 
     def test_measurement_jobs_were_started_before_trial_jobs_finished(self):
         """Fake test to be implemented later."""
-        assert True
+        pass
 
     def test_db_contains_experiment_results(self):
         """Fake test to be implemented later."""
-        assert True
+        pass
 
     def test_experiment_report_is_generated(self):
         """Fake test to be implemented later."""
-        assert True
+        pass

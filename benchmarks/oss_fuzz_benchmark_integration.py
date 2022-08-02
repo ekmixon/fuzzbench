@@ -80,15 +80,21 @@ def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
         logs.error(
             '%s is not a git repo. Try running git submodule update --init',
             OSS_FUZZ_DIR)
-        raise RuntimeError('%s is not a git repo.' % OSS_FUZZ_DIR)
+        raise RuntimeError(f'{OSS_FUZZ_DIR} is not a git repo.')
     oss_fuzz_repo_manager = GitRepoManager(OSS_FUZZ_DIR)
     projects_dir = os.path.join(OSS_FUZZ_DIR, 'projects', project)
     try:
         # Find an OSS-Fuzz commit that can be used to build the benchmark.
-        _, oss_fuzz_commit, _ = oss_fuzz_repo_manager.git([
-            'log', '--before=' + commit_date.isoformat(), '-n1', '--format=%H',
-            projects_dir
-        ])
+        _, oss_fuzz_commit, _ = oss_fuzz_repo_manager.git(
+            [
+                'log',
+                f'--before={commit_date.isoformat()}',
+                '-n1',
+                '--format=%H',
+                projects_dir,
+            ]
+        )
+
         oss_fuzz_commit = oss_fuzz_commit.strip()
         if not oss_fuzz_commit:
             logs.warning('No suitable earlier OSS-Fuzz commit found.')
@@ -104,7 +110,7 @@ def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
 def get_benchmark_name(project, fuzz_target, benchmark_name=None):
     """Returns the name of the benchmark. Returns |benchmark_name| if is set.
     Otherwise returns a name based on |project| and |fuzz_target|."""
-    return benchmark_name if benchmark_name else project + '_' + fuzz_target
+    return benchmark_name or f'{project}_{fuzz_target}'
 
 
 def _load_base_builder_docker_repo():
@@ -142,7 +148,7 @@ def _replace_base_builder_digest(dockerfile_path, digest):
     new_lines = []
     for line in lines:
         if line.strip().startswith('FROM'):
-            line = 'FROM gcr.io/oss-fuzz-base/base-builder@' + digest + '\n'
+            line = f'FROM gcr.io/oss-fuzz-base/base-builder@{digest}' + '\n'
 
         new_lines.append(line)
 
@@ -154,8 +160,7 @@ def replace_base_builder(benchmark_dir, commit_date):
     """Replace the parent image of the Dockerfile in |benchmark_dir|,
     base-builder (latest), with a version of base-builder that is likely to
     build the project as it was on |commit_date| without issue."""
-    base_builder_repo = _load_base_builder_docker_repo()
-    if base_builder_repo:
+    if base_builder_repo := _load_base_builder_docker_repo():
         base_builder_digest = base_builder_repo.find_digest(commit_date)
         logs.info('Using base-builder with digest %s.', base_builder_digest)
         _replace_base_builder_digest(

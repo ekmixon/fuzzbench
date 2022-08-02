@@ -26,7 +26,7 @@ from common import filestore_utils
 
 def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
     """Returns the key in coverage dict for a pair of fuzzer-benchmark."""
-    return fuzzer + ' ' + benchmark
+    return f'{fuzzer} {benchmark}'
 
 
 def get_fuzzer_filestore_path(benchmark_df, fuzzer):
@@ -75,15 +75,15 @@ def get_unique_region_dict(benchmark_coverage_dict):
     """Returns a dictionary containing the covering fuzzers for each
     unique region, where the |threshold| defines which regions are unique."""
     region_dict = collections.defaultdict(list)
-    unique_region_dict = {}
     threshold_count = 1
     for fuzzer in benchmark_coverage_dict:
         for region in benchmark_coverage_dict[fuzzer]:
             region_dict[region].append(fuzzer)
-    for region, fuzzers in region_dict.items():
-        if len(fuzzers) <= threshold_count:
-            unique_region_dict[region] = fuzzers
-    return unique_region_dict
+    return {
+        region: fuzzers
+        for region, fuzzers in region_dict.items()
+        if len(fuzzers) <= threshold_count
+    }
 
 
 def get_unique_region_cov_df(unique_region_dict, fuzzer_names):
@@ -108,9 +108,7 @@ def get_benchmark_cov_dict(coverage_dict, benchmark):
     for key_pair, covered_regions in coverage_dict.items():
         current_fuzzer, current_benchmark = key_pair.split()
         if current_benchmark == benchmark:
-            covered_regions_in_set = set()
-            for region in covered_regions:
-                covered_regions_in_set.add(tuple(region))
+            covered_regions_in_set = {tuple(region) for region in covered_regions}
             benchmark_cov_dict[current_fuzzer] = covered_regions_in_set
     return benchmark_cov_dict
 
@@ -157,16 +155,14 @@ def get_unique_covered_percentage(fuzzer_row_covered_regions,
     """Returns the number of regions covered by the fuzzer of the column
     but not by the fuzzer of the row."""
 
-    unique_region_count = 0
-    for region in fuzzer_col_covered_regions:
-        if region not in fuzzer_row_covered_regions:
-            unique_region_count += 1
-    return unique_region_count
+    return sum(
+        region not in fuzzer_row_covered_regions
+        for region in fuzzer_col_covered_regions
+    )
 
 
 def rank_by_average_normalized_score(benchmarks_unique_coverage_list):
     """Returns the rank based on average normalized score on unique coverage."""
     df_list = [df.set_index('fuzzer') for df in benchmarks_unique_coverage_list]
     combined_df = pd.concat(df_list, axis=1).astype(float).T
-    scores = data_utils.experiment_rank_by_average_normalized_score(combined_df)
-    return scores
+    return data_utils.experiment_rank_by_average_normalized_score(combined_df)

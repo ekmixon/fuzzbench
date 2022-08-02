@@ -185,7 +185,7 @@ def _test_create_trial_instance(  # pylint: disable=too-many-locals
     scheduler.create_trial_instance(fuzzer_param, benchmark, trial,
                                     experiment_config, preemptible)
     instance_name = 'r-test-experiment-9'
-    expected_startup_script_path = '/tmp/%s-start-docker.sh' % instance_name
+    expected_startup_script_path = f'/tmp/{instance_name}-start-docker.sh'
 
     mocked_create_instance.assert_called_with(
         instance_name,

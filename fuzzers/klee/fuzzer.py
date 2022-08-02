@@ -120,8 +120,7 @@ def get_bcs_for_shared_libs(fuzz_target):
         path = pathlib.Path(out_dir)
         path.mkdir(exist_ok=True)
         so_path = line.split('=>')[1].split(' ')[1]
-        so_name = so_path.split('/')[-1].split('.')[0]
-        if so_name:
+        if so_name := so_path.split('/')[-1].split('.')[0]:
             getbc_cmd = 'extract-bc -o {out_dir}/{so_name}.bc {target}'.format(
                 target=so_path, out_dir=out_dir, so_name=so_name)
             print('[extract-bc command] | {getbc_cmd}'.format(
@@ -136,14 +135,13 @@ def get_bcs_for_shared_libs(fuzz_target):
 
 def get_bc_files():
     """Returns list of .bc files in the OUT directory"""
-    out_dir = './' + LIB_BC_DIR
+    out_dir = f'./{LIB_BC_DIR}'
     files = os.listdir(out_dir)
-    bc_files = []
-    for filename in files:
-        if filename.split('.')[-1] == 'bc' and 'fuzz-target' not in filename:
-            bc_files.append(filename)
-
-    return bc_files
+    return [
+        filename
+        for filename in files
+        if filename.split('.')[-1] == 'bc' and 'fuzz-target' not in filename
+    ]
 
 
 def fix_fuzzer_lib():
@@ -222,13 +220,13 @@ def emptydir(path):
 def run(command, hide_output=False, ulimit_cmd=None):
     """Run the command |command|, optionally, run |ulimit_cmd| first."""
     cmd = ' '.join(command)
-    print('[run_cmd] {}'.format(cmd))
+    print(f'[run_cmd] {cmd}')
 
     output_stream = subprocess.DEVNULL if hide_output else None
     if ulimit_cmd:
-        ulimit_command = [ulimit_cmd + ';']
+        ulimit_command = [f'{ulimit_cmd};']
         ulimit_command.extend(command)
-        print('[ulimit_command] {}'.format(' '.join(ulimit_command)))
+        print(f"[ulimit_command] {' '.join(ulimit_command)}")
         ret = subprocess.call(' '.join(ulimit_command),
                               stdout=output_stream,
                               stderr=output_stream,
@@ -329,14 +327,13 @@ def convert_individual_ktest(ktest_tool, kfile, queue_dir, output_klee,
     # Check if this is a crash
     crash_regex = os.path.join(output_klee, '{fn}.*.err'.format(fn=ktest_fn))
     crashes = glob.glob(crash_regex)
-    n_crashes = 0
     if len(crashes) == 1:
         crash_out = os.path.join(crash_dir, os.path.basename(ktest_fn))
         shutil.copy(file_out, crash_out)
         info_in = crashes[0]
         info_out = os.path.join(info_dir, os.path.basename(info_in))
         shutil.copy(info_in, info_out)
-    return n_crashes
+    return 0
 
 
 # pylint: disable=import-error
@@ -396,17 +393,19 @@ def fuzz(input_corpus, output_corpus, target_binary):
     print('[run_fuzzer] Running target with klee')
 
     klee_bin = os.path.join(out_dir, 'bin/klee')
-    target_binary_bc = '{}.bc'.format(target_binary)
+    target_binary_bc = f'{target_binary}.bc'
     max_time_seconds = (
         int(os.getenv('MAX_TOTAL_TIME', str(MAX_TOTAL_TIME_DEFAULT))) * 4) // 5
 
     seeds_option = ['-zero-seed-extension', '-seed-dir', input_klee
                    ] if n_converted > 0 else []
 
-    llvm_link_libs = []
-    for filename in get_bc_files():
-        llvm_link_libs.append('-link-llvm-lib=./{lib_bc}/{filename}'.format(
-            lib_bc=LIB_BC_DIR, filename=filename))
+    llvm_link_libs = [
+        '-link-llvm-lib=./{lib_bc}/{filename}'.format(
+            lib_bc=LIB_BC_DIR, filename=filename
+        )
+        for filename in get_bc_files()
+    ]
 
     max_memory_mb = str(int(psutil.virtual_memory().available // 10**6 * 0.9))
 
@@ -428,12 +427,12 @@ def fuzz(input_corpus, output_corpus, target_binary):
         'uclibc',
         '-libcxx',
         '-posix-runtime',
-        '-disable-verify',  # Needed because debug builds don't always work.
+        '-disable-verify',
         '-output-dir',
         queue_dir,
+        *llvm_link_libs,
     ]
 
-    klee_cmd.extend(llvm_link_libs)
 
     if seeds_option:
         klee_cmd.extend(seeds_option)

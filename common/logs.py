@@ -115,7 +115,7 @@ class Logger:
 
         logging.getLogger(name).setLevel(log_level)
         logging.getLogger(name).addFilter(LengthFilter())
-        self.default_extras = default_extras if default_extras else {}
+        self.default_extras = default_extras or {}
 
     def error(self, *args, **kwargs):
         """Wrapper that uses _log_function_wrapper to call error."""
@@ -157,21 +157,21 @@ def log(logger, severity, message, *args, extras=None):
     message = str(message)
     if utils.is_local():
         if extras:
-            message += ' Extras: ' + str(extras)
+            message += f' Extras: {str(extras)}'
         logging.log(severity, message, *args)
         return
     if logger is None:
         logger = _default_logger
     assert logger
     if args:
-        message = message % args
+        message %= args
     struct_message = {
         'message': message,
     }
     all_extras = _default_extras.copy()
     extras = extras or {}
     all_extras.update(extras)
-    struct_message.update(all_extras)
+    struct_message |= all_extras
     severity = LogSeverity(severity).name
     logger.log_struct(struct_message, severity=severity)
 
@@ -221,5 +221,5 @@ class LengthFilter(logging.Filter):
 
     def filter(self, record):
         if len(record.msg) > LOG_LENGTH_LIMIT:
-            record.msg = ('TRUNCATED: ' + record.msg)[:LOG_LENGTH_LIMIT]
+            record.msg = f'TRUNCATED: {record.msg}'[:LOG_LENGTH_LIMIT]
         return True

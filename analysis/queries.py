@@ -64,11 +64,11 @@ def add_nonprivate_experiments_for_merge_with_clobber(experiment_names):
         for result in session.query(Experiment.time_created).filter(
                 Experiment.name.in_(experiment_names)):
             experiment_creation_time = result[0]
-            if not earliest_creation_time:
-                earliest_creation_time = experiment_creation_time
-            else:
-                earliest_creation_time = min(earliest_creation_time,
-                                             experiment_creation_time)
+            earliest_creation_time = (
+                min(earliest_creation_time, experiment_creation_time)
+                if earliest_creation_time
+                else experiment_creation_time
+            )
 
         nonprivate_experiments = session.query(Experiment.name).filter(
             ~Experiment.private, ~Experiment.name.in_(experiment_names),

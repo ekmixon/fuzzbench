@@ -31,7 +31,7 @@ def get_unusual_build_directory(target_directory):
     return os.path.join(target_directory, 'unusual')
 
 
-def build(*args):  # pylint: disable=too-many-branches,too-many-statements
+def build(*args):    # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
@@ -109,7 +109,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['AFL_LLVM_MAP_ADDR'] = '0x10000'
     # Generate an extra dictionary.
     if 'dict2file' in build_modes or 'native' in build_modes:
-        os.environ['AFL_LLVM_DICT2FILE'] = build_directory + '/afl++.dict'
+        os.environ['AFL_LLVM_DICT2FILE'] = f'{build_directory}/afl++.dict'
     # Enable context sentitivity for LLVM mode (non LTO only)
     if 'ctx' in build_modes:
         os.environ['AFL_LLVM_CTX'] = '1'
@@ -181,8 +181,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         cmplog_build_directory = get_cmplog_build_directory(build_directory)
         os.mkdir(cmplog_build_directory)
         new_env['OUT'] = cmplog_build_directory
-        fuzz_target = os.getenv('FUZZ_TARGET')
-        if fuzz_target:
+        if fuzz_target := os.getenv('FUZZ_TARGET'):
             new_env['FUZZ_TARGET'] = os.path.join(cmplog_build_directory,
                                                   os.path.basename(fuzz_target))
 
@@ -200,8 +199,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         unusual_build_directory = get_unusual_build_directory(build_directory)
         os.mkdir(unusual_build_directory)
         new_env['OUT'] = unusual_build_directory
-        fuzz_target = os.getenv('FUZZ_TARGET')
-        if fuzz_target:
+        if fuzz_target := os.getenv('FUZZ_TARGET'):
             new_env['FUZZ_TARGET'] = os.path.join(unusual_build_directory,
                                                   os.path.basename(fuzz_target))
 
@@ -252,10 +250,11 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
         flags += ['-u', unusual_target_binary]
 
     if not skip:
-        if not flags or not flags[0] == '-Q' and '-p' not in flags:
+        if not flags or flags[0] != '-Q' and '-p' not in flags:
             flags += ['-p', 'fast']
-        if ((not flags or (not '-l' in flags and not '-R' in flags)) and
-                os.path.exists(cmplog_target_binary)):
+        if (
+            not flags or '-l' not in flags and '-R' not in flags
+        ) and os.path.exists(cmplog_target_binary):
             flags += ['-l', '2']
         os.environ['AFL_DISABLE_TRIM'] = "1"
         if 'ADDITIONAL_ARGS' in os.environ:

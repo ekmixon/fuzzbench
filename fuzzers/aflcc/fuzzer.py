@@ -262,8 +262,7 @@ def run_fuzzer(input_corpus,
     ]
     if additional_flags:
         command.extend(additional_flags)
-    dictionary_path = utils.get_dictionary_path(target_binary)
-    if dictionary_path:
+    if dictionary_path := utils.get_dictionary_path(target_binary):
         command.extend(['-x', dictionary_path])
     command += [
         '--',

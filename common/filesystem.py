@@ -76,9 +76,9 @@ def copytree(src, dst, ignore_errors=False):
     the copying process (e.g. if a fuzzer is adding and removing corpus elements
     during the copy."""
     if not os.path.isdir(src):
-        raise NotADirectoryError('Not a directory: ' + src)
+        raise NotADirectoryError(f'Not a directory: {src}')
     if os.path.exists(dst):
-        raise FileExistsError('File exists: ' + dst)
+        raise FileExistsError(f'File exists: {dst}')
     os.makedirs(dst)
     for root, _, filenames in os.walk(src):
         for filename in filenames:
@@ -96,7 +96,9 @@ def replace_dir(src_dir, dst_dir, move=True):
     it."""
     if not os.path.isdir(src_dir):
         raise NotADirectoryError(
-            'src_dir must be a directory. %s is not a directory.' % src_dir)
+            f'src_dir must be a directory. {src_dir} is not a directory.'
+        )
+
     shutil.rmtree(dst_dir, ignore_errors=True)
     if move:
         shutil.move(src_dir, dst_dir)
@@ -106,7 +108,7 @@ def replace_dir(src_dir, dst_dir, move=True):
 
 def make_dir_copy(src_dir):
     """Copy |src_dir| to "|src_dir|-copy" and return its name."""
-    dst_dir = src_dir + '-copy'
+    dst_dir = f'{src_dir}-copy'
     replace_dir(src_dir, dst_dir, move=False)
     return dst_dir
 
@@ -116,6 +118,8 @@ def list_files(directory):
     subdirectories."""
     all_files = []
     for (root, _, files) in os.walk(directory):
-        for filename in files:
-            all_files.append(os.path.abspath(os.path.join(root, filename)))
+        all_files.extend(
+            os.path.abspath(os.path.join(root, filename)) for filename in files
+        )
+
     return all_files

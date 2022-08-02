@@ -77,9 +77,8 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     flags += extra_flags
     if 'ADDITIONAL_ARGS' in os.environ:
         flags += os.environ['ADDITIONAL_ARGS'].split(' ')
-    dictionary_path = utils.get_dictionary_path(target_binary)
-    if dictionary_path:
-        flags.append('-dict=' + dictionary_path)
+    if dictionary_path := utils.get_dictionary_path(target_binary):
+        flags.append(f'-dict={dictionary_path}')
 
     command = [target_binary] + flags + [output_corpus, input_corpus]
     print('[run_fuzzer] Running command: ' + ' '.join(command))

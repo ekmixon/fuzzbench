@@ -80,10 +80,7 @@ def get_containing_subdir(path: Path, parent_path: Path) -> Optional[str]:
     if parts[0] != parent_path.name:
         return None
     containing_subdir = _SRC_ROOT / parts[0] / parts[1]
-    if not containing_subdir.is_dir():
-        # Can only be a fuzzer or benchmark if it is a directory.
-        return None
-    return containing_subdir.name
+    return containing_subdir.name if containing_subdir.is_dir() else None
 
 
 def get_fuzzer(path: Path) -> Optional[str]:
@@ -152,8 +149,7 @@ class FuzzerAndBenchmarkValidator:
             # We know this is invalid and have already complained about it.
             return False
 
-        valid = benchmark_utils.validate(benchmark)
-        if valid:
+        if valid := benchmark_utils.validate(benchmark):
             return True
 
         self.invalid_benchmarks.add(benchmark)
@@ -180,9 +176,7 @@ MIGRATIONS_PATH = os.path.join(_SRC_ROOT, 'database', 'alembic', 'versions')
 def filter_migrations(paths):
     """Filter out migration scripts."""
     # TODO(metzman): Filter out all alembic scripts.
-    return [
-        path for path in paths if not os.path.dirname(path) == MIGRATIONS_PATH
-    ]
+    return [path for path in paths if os.path.dirname(path) != MIGRATIONS_PATH]
 
 
 def test_changed_integrations(paths: List[Path]):
@@ -231,8 +225,7 @@ def lint(_: List[Path]) -> bool:
         'presubmit.py',
     ]
 
-    command = ['python3', '-m', 'pylint', '-j', '0']
-    command.extend(to_check)
+    command = ['python3', '-m', 'pylint', '-j', '0', *to_check]
     returncode = subprocess.run(command, check=False).returncode
     return returncode == 0
 
@@ -267,8 +260,7 @@ def yapf(paths: List[Path], validate: bool = True) -> bool:
         return True
 
     validate_argument = '-d' if validate else '-i'
-    command = ['yapf', validate_argument, '-p']
-    command.extend(paths)
+    command = ['yapf', validate_argument, '-p', *paths]
     returncode = subprocess.run(command, check=False).returncode
     success = returncode == 0
     if not success:
@@ -286,8 +278,7 @@ def validate_experiment_requests(paths: List[Path]):
         experiment_requests = yaml_utils.read(
             automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
     except yaml.parser.ParserError:
-        print('Error parsing %s.' %
-              automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
+        print(f'Error parsing {automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH}.')
         return False
 
     # Only validate the latest request.
@@ -295,8 +286,7 @@ def validate_experiment_requests(paths: List[Path]):
         experiment_requests[:1])
 
     if not result:
-        print('%s is not valid.' %
-              automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
+        print(f'{automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH} is not valid.')
 
     return result
 
@@ -310,10 +300,7 @@ def is_path_ignored(path: Path) -> bool:
 
     # Third party directories can be anywhere.
     path_parts = str(path).split(os.sep)
-    if any(path_part == THIRD_PARTY_DIR_NAME for path_part in path_parts):
-        return True
-
-    return False
+    return THIRD_PARTY_DIR_NAME in path_parts
 
 
 def license_check(paths: List[Path]) -> bool:
@@ -334,7 +321,7 @@ def license_check(paths: List[Path]) -> bool:
 
         with open(path) as file_handle:
             if _LICENSE_CHECK_STRING not in file_handle.read():
-                print('Missing license header in file %s.' % str(path))
+                print(f'Missing license header in file {str(path)}.')
                 success = False
 
     return success
@@ -378,11 +365,11 @@ def do_default_checks(file_paths: List[Path], checks) -> bool:
             continue
 
         if not check(file_paths):
-            print('ERROR: %s failed, see errors above.' % check_name)
+            print(f'ERROR: {check_name} failed, see errors above.')
             failed_checks.append(check_name)
 
     if failed_checks:
-        print('Failed checks: %s' % ' '.join(failed_checks))
+        print(f"Failed checks: {' '.join(failed_checks)}")
         return False
 
     return True
@@ -426,10 +413,11 @@ def initialize_logs(verbose: bool):
 
 def get_relevant_files(all_files: bool) -> List[Path]:
     """Get the files that should be checked."""
-    if not all_files:
-        relevant_files = [Path(path) for path in diff_utils.get_changed_files()]
-    else:
-        relevant_files = get_all_files()
+    relevant_files = (
+        get_all_files()
+        if all_files
+        else [Path(path) for path in diff_utils.get_changed_files()]
+    )
 
     return filter_ignored_files(relevant_files)
 
@@ -443,7 +431,7 @@ def do_single_check(command: str, relevant_files: List[Path],
     else:
         success = check(relevant_files)
     if not success:
-        print('ERROR: %s failed, see errors above.' % check.__name__)
+        print(f'ERROR: {check.__name__} failed, see errors above.')
 
     return success
 

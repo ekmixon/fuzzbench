@@ -33,9 +33,7 @@ def _setup_experiment_files(fs):
     config_filepath = os.path.join(os.path.dirname(__file__), 'test_data',
                                    'experiment-config.yaml')
     fs.add_real_file(config_filepath)
-    experiment_config = yaml_utils.read(config_filepath)
-
-    return experiment_config
+    return yaml_utils.read(config_filepath)
 
 
 @pytest.mark.parametrize(

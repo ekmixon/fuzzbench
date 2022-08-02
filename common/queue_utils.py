@@ -23,8 +23,7 @@ def initialize_queue(redis_host):
     """Returns a redis-backed rq queue."""
     queue_name = experiment_utils.get_experiment_name()
     redis_connection = redis.Redis(host=redis_host)
-    queue = rq.Queue(queue_name, connection=redis_connection)
-    return queue
+    return rq.Queue(queue_name, connection=redis_connection)
 
 
 def get_all_jobs(queue):

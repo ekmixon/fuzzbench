@@ -130,7 +130,7 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
                 value)
 
     if not valid:
-        raise ValidationError('Config: %s is invalid.' % config_filename)
+        raise ValidationError(f'Config: {config_filename} is invalid.')
 
     config['local_experiment'] = local_experiment
     return config
@@ -272,10 +272,11 @@ def add_oss_fuzz_corpus(benchmark, oss_fuzz_corpora_dir):
     project = benchmark_utils.get_project(benchmark)
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
 
-    if not fuzz_target.startswith(project):
-        full_fuzz_target = '%s_%s' % (project, fuzz_target)
-    else:
-        full_fuzz_target = fuzz_target
+    full_fuzz_target = (
+        fuzz_target
+        if fuzz_target.startswith(project)
+        else f'{project}_{fuzz_target}'
+    )
 
     src_corpus_url = _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT.format(
         project=project, fuzz_target=full_fuzz_target)
@@ -289,9 +290,7 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
 
     def filter_file(tar_info):
         """Filter out unnecessary directories."""
-        if FILTER_SOURCE_REGEX.match(tar_info.name):
-            return None
-        return tar_info
+        return None if FILTER_SOURCE_REGEX.match(tar_info.name) else tar_info
 
     # Set environment variables to use corresponding filestore_utils.
     os.environ['EXPERIMENT_FILESTORE'] = config['experiment_filestore']
@@ -305,7 +304,7 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
     source_archive = 'src.tar.gz'
     with tarfile.open(source_archive, 'w:gz') as tar:
         tar.add(utils.ROOT_DIR, arcname='', recursive=True, filter=filter_file)
-    filestore_utils.cp(source_archive, base_destination + '/', parallel=True)
+    filestore_utils.cp(source_archive, f'{base_destination}/', parallel=True)
     os.remove(source_archive)
 
     # Send config files.
@@ -347,9 +346,8 @@ class LocalDispatcher(BaseDispatcher):
         experiment_filestore_path = os.path.abspath(
             self.config['experiment_filestore'])
         filesystem.create_directory(experiment_filestore_path)
-        sql_database_arg = (
-            'SQL_DATABASE_URL=sqlite:///{}?check_same_thread=False'.format(
-                os.path.join(experiment_filestore_path, 'local.db')))
+        sql_database_arg = f"SQL_DATABASE_URL=sqlite:///{os.path.join(experiment_filestore_path, 'local.db')}?check_same_thread=False"
+
 
         docker_registry = self.config['docker_registry']
         set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(
@@ -360,7 +358,7 @@ class LocalDispatcher(BaseDispatcher):
             self.config['experiment_filestore'])
         # TODO: (#484) Use config in function args or set as environment
         # variables.
-        set_docker_registry_arg = 'DOCKER_REGISTRY={}'.format(docker_registry)
+        set_docker_registry_arg = f'DOCKER_REGISTRY={docker_registry}'
         set_experiment_filestore_arg = (
             'EXPERIMENT_FILESTORE={experiment_filestore}'.format(
                 experiment_filestore=self.config['experiment_filestore']))
@@ -398,7 +396,7 @@ class LocalDispatcher(BaseDispatcher):
             'LOCAL_EXPERIMENT=True',
             '--cap-add=SYS_PTRACE',
             '--cap-add=SYS_NICE',
-            '--name=%s' % container_name,
+            f'--name={container_name}',
             docker_image_url,
             '/bin/bash',
             '-c',
@@ -408,8 +406,9 @@ class LocalDispatcher(BaseDispatcher):
             'tar -xvzf ${WORK}/src.tar.gz -C ${WORK}/src && '
             'PYTHONPATH=${WORK}/src python3 '
             '${WORK}/src/experiment/dispatcher.py || '
-            '/bin/bash'  # Open shell if experiment fails.
+            '/bin/bash',
         ]
+
         logs.info('Starting dispatcher with container name: %s', container_name)
         return new_process.execute(command, write_to_stdout=True)
 

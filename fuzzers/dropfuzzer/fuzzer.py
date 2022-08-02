@@ -85,9 +85,7 @@ def check_skip_det_compatible(additional_flags):
     """ Checks if additional flags are compatible with '-d' option"""
     # AFL refuses to take in '-d' with '-M' or '-S' options for parallel mode.
     # (cf. https://github.com/google/AFL/blob/8da80951/afl-fuzz.c#L7477)
-    if '-M' in additional_flags or '-S' in additional_flags:
-        return False
-    return True
+    return '-M' not in additional_flags and '-S' not in additional_flags
 
 
 def run_afl_fuzz(input_corpus,
@@ -116,8 +114,7 @@ def run_afl_fuzz(input_corpus,
         command.append('-d')
     if additional_flags:
         command.extend(additional_flags)
-    dictionary_path = utils.get_dictionary_path(target_binary)
-    if dictionary_path:
+    if dictionary_path := utils.get_dictionary_path(target_binary):
         command.extend(['-x', dictionary_path])
     command += [
         '--',

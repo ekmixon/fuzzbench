@@ -383,7 +383,9 @@ class TestIntegrationMeasurement:
         # Set up the coverage binary.
         benchmark = 'freetype2-2017'
         coverage_binary_src = get_test_data_path(
-            'test_measure_snapshot_coverage', benchmark + '-coverage')
+            'test_measure_snapshot_coverage', f'{benchmark}-coverage'
+        )
+
         benchmark_cov_binary_dir = os.path.join(
             build_utils.get_coverage_binaries_dir(), benchmark)
 
@@ -475,9 +477,7 @@ def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
         # instead of an infinite loop.
         nonlocal call_count
         call_count += 1
-        if call_count >= loop_iterations:
-            return False
-        return True
+        return call_count < loop_iterations
 
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
     measure_manager.measure_loop(experiment_config, 100)

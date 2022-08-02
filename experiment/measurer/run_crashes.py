@@ -109,7 +109,8 @@ def do_crashes_run(app_binary, crashes_dir):
     for root, _, filenames in os.walk(crashes_dir):
         for filename in filenames:
             crash_testcase_path = os.path.join(root, filename)
-            crash = process_crash(app_binary, crash_testcase_path, crashes_dir)
-            if crash:
+            if crash := process_crash(
+                app_binary, crash_testcase_path, crashes_dir
+            ):
                 crashes[_get_crash_key(crash)] = crash
     return crashes

@@ -31,10 +31,7 @@ def _using_gsutil():
 
 def get_impl():
     """Returns the implementation for filestore_utils."""
-    if _using_gsutil():
-        return gsutil
-    # Use local_filestore when not using gsutil.
-    return local_filestore
+    return gsutil if _using_gsutil() else local_filestore
 
 
 def cp(source, destination, recursive=False, expect_zero=True, parallel=False):  # pylint: disable=invalid-name

@@ -41,9 +41,7 @@ def get_changed_fuzzers(changed_files: List[str] = None) -> List[str]:
     """Returns a list of fuzzers that have changed functionality based
     on the files that have changed in |changed_files|."""
     changed_files = get_absolute_paths(changed_files)
-    changed_fuzzers = fuzzer_dependencies.get_files_dependent_fuzzers(
-        changed_files)
-    return changed_fuzzers
+    return fuzzer_dependencies.get_files_dependent_fuzzers(changed_files)
 
 
 def get_changed_fuzzers_for_ci(changed_files: List[str] = None) -> List[str]:
@@ -62,6 +60,4 @@ def get_changed_benchmarks(changed_files: List[str] = None) -> List[str]:
     """Returns a list of benchmarks that have changed functionality based
     on the files that have changed in |changed_files|."""
     changed_files = get_absolute_paths(changed_files)
-    changed_benchmarks = benchmark_dependencies.get_files_dependent_benchmarks(
-        changed_files)
-    return changed_benchmarks
+    return benchmark_dependencies.get_files_dependent_benchmarks(changed_files)

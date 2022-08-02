@@ -27,7 +27,7 @@ def store_build_logs(build_config, build_result):
         tmp.write(build_output)
         tmp.flush()
 
-        build_log_filename = build_config + '.txt'
+        build_log_filename = f'{build_config}.txt'
         filestore_utils.cp(
             tmp.name,
             exp_path.filestore(get_build_logs_dir() / build_log_filename))

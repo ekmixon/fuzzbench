@@ -63,8 +63,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         crashes_dir,
         '-s',
     ]
-    dictionary_path = utils.get_dictionary_path(target_binary)
-    if dictionary_path:
+    if dictionary_path := utils.get_dictionary_path(target_binary):
         command.extend(['--dict', dictionary_path])
     command.extend(['--', './qemu-x86_64', target_binary])
 

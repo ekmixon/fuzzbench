@@ -36,19 +36,19 @@ def get_instance_group_name(experiment: str):
     """Returns the name of the instance group of measure workers for
     |experiment|."""
     # "worker-" needs to come first because name cannot start with number.
-    return 'worker-' + experiment
+    return f'worker-{experiment}'
 
 
 def get_measure_worker_instance_template_name(experiment: str):
     """Returns an instance template name for measurer workers running in
     |experiment|."""
-    return 'worker-' + experiment
+    return f'worker-{experiment}'
 
 
 def get_base_worker_instance_name(experiment):
     """GCE will create instances for this group in the format
     "w-|experiment|-$UNIQUE_ID". 'w' is short for "worker"."""
-    return 'w-' + experiment
+    return f'w-{experiment}'
 
 
 def initialize(experiment_config: dict):
@@ -59,8 +59,10 @@ def initialize(experiment_config: dict):
     project = experiment_config['project']
     instance_template_name = get_measure_worker_instance_template_name(
         experiment)
-    docker_image = posixpath.join(experiment_config['docker_registry'],
-                                  'measure-worker:{}'.format(experiment))
+    docker_image = posixpath.join(
+        experiment_config['docker_registry'], f'measure-worker:{experiment}'
+    )
+
 
     redis_host = experiment_config['redis_host']
     experiment_filestore = experiment_config['experiment_filestore']
@@ -84,8 +86,7 @@ def initialize(experiment_config: dict):
 
     gce.create_instance_group(instance_group_name, instance_template_url,
                               base_instance_name, project, zone)
-    queue = queue_utils.initialize_queue(redis_host)
-    return queue
+    return queue_utils.initialize_queue(redis_host)
 
 
 def teardown(experiment_config: dict):

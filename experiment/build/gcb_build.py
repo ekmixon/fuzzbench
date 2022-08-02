@@ -62,9 +62,10 @@ def build_coverage(benchmark):
     image_templates = {
         image_name: image_specs
         for image_name, image_specs in buildable_images.items()
-        if (image_name == (benchmark + '-project-builder') or
-            image_specs['type'] == 'coverage')
+        if image_name == f'{benchmark}-project-builder'
+        or image_specs['type'] == 'coverage'
     }
+
     config = generate_cloudbuild.create_cloudbuild_spec(image_templates,
                                                         benchmark=benchmark)
     config_name = 'benchmark-{benchmark}-coverage'.format(benchmark=benchmark)
@@ -78,10 +79,10 @@ def _build(
     """Submit build to GCB."""
     with tempfile.NamedTemporaryFile() as config_file:
         yaml_utils.write(config_file.name, config)
-        logger.debug('Using build configuration: %s' % config)
+        logger.debug(f'Using build configuration: {config}')
 
-        config_arg = '--config=%s' % config_file.name
-        machine_type_arg = '--machine-type=%s' % GCB_MACHINE_TYPE
+        config_arg = f'--config={config_file.name}'
+        machine_type_arg = f'--machine-type={GCB_MACHINE_TYPE}'
 
         # Use "s" suffix to denote seconds.
         timeout_arg = '--timeout=%ds' % timeout_seconds

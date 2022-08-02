@@ -46,7 +46,7 @@ def stop_experiment(experiment_name, experiment_config_filename):
     else:
         experiment_instances.append(dispatcher_instance)
 
-    trial_prefix = 'r-' + experiment_name
+    trial_prefix = f'r-{experiment_name}'
     experiment_instances.extend([
         instance for instance in instances if instance.startswith(trial_prefix)
     ])

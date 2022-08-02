@@ -36,8 +36,7 @@ def _get_instance_items(project, zone):
     request = instances.list(project=project, zone=zone)
     while request is not None:
         response = request.execute(num_retries=NUM_RETRIES)
-        for instance in response['items']:
-            yield instance
+        yield from response['items']
         request = instances.list_next(previous_request=request,
                                       previous_response=response)
 

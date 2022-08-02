@@ -31,11 +31,7 @@ def get(environment_variable, default_value=None):
     value_string = os.getenv(environment_variable)
 
     # value_string will be None if the variable is not defined.
-    if value_string is None:
-        return default_value
-
-    # Evaluate the value of the environment variable with string fallback.
-    return _eval_value(value_string)
+    return default_value if value_string is None else _eval_value(value_string)
 
 
 # TODO(metzman): Use get and set everywhere instead of environ[]/setenv/getenv.

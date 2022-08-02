@@ -31,12 +31,10 @@ def get_files_dependent_benchmarks(dependency_files):
     dependent_benchmarks = []
     benchmarks = benchmark_utils.get_all_benchmarks()
     for dependency_file in dependency_files:
-        for benchmark in benchmarks:
-
-            if not is_subpath_of_benchmark(dependency_file, benchmark):
-                # Benchmarks can only depend on files in their directory.
-                continue
-
-            dependent_benchmarks.append(benchmark)
+        dependent_benchmarks.extend(
+            benchmark
+            for benchmark in benchmarks
+            if is_subpath_of_benchmark(dependency_file, benchmark)
+        )
 
     return dependent_benchmarks

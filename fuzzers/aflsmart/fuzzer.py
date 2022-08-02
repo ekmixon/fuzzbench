@@ -37,25 +37,25 @@ def build():
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run afl-fuzz on target."""
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
-    os.environ['PATH'] += os.pathsep + '/out/peach-3.0.202/'
+    os.environ['PATH'] += f'{os.pathsep}/out/peach-3.0.202/'
 
     composite_mode = False
     input_model = ''
     benchmark_name = os.environ['BENCHMARK']
-    if benchmark_name == 'libpng-1.2.56':
-        input_model = 'png.xml'
-    if benchmark_name == 'libpcap_fuzz_both':
-        input_model = 'pcap.xml'
-    if benchmark_name == 'libjpeg-turbo-07-2017':
-        input_model = 'jpeg.xml'
-    if benchmark_name == 'freetype2-2017':
-        input_model = 'xtf.xml'
-    if benchmark_name == 'vorbis-2017-12-11':
-        input_model = 'ogg.xml'
     if benchmark_name == 'bloaty_fuzz_target':
         input_model = 'bloaty_composite.xml'
         composite_mode = True
 
+    elif benchmark_name == 'freetype2-2017':
+        input_model = 'xtf.xml'
+    elif benchmark_name == 'libjpeg-turbo-07-2017':
+        input_model = 'jpeg.xml'
+    elif benchmark_name == 'libpcap_fuzz_both':
+        input_model = 'pcap.xml'
+    elif benchmark_name == 'libpng-1.2.56':
+        input_model = 'png.xml'
+    elif benchmark_name == 'vorbis-2017-12-11':
+        input_model = 'ogg.xml'
     additional_flags = [
         # Enable stacked mutations
         '-h',

@@ -81,7 +81,7 @@ def get_real_benchmark_name(benchmark):
 def count_oss_fuzz_seeds(fuzz_target_path):
     """Count the number of seeds in the OSS-Fuzz seed archive for
     |fuzze_target_path|."""
-    zip_file_name = fuzz_target_path + '_seed_corpus.zip'
+    zip_file_name = f'{fuzz_target_path}_seed_corpus.zip'
     if not os.path.exists(zip_file_name):
         return 0
 
@@ -165,18 +165,19 @@ def get_benchmark_info(build_path):
 def infos_to_markdown_table(benchmark_infos):
     """Conver a list of BenchmarkInfos into a markdown table and
     return the result."""
-    markdown = ''
-    for benchmark_info in sorted(benchmark_infos,
-                                 key=lambda info: info.benchmark):
-        markdown += '|{}|{}|{}|{}|{}|{}|\n'.format(*benchmark_info)
-    return markdown
+    return ''.join(
+        '|{}|{}|{}|{}|{}|{}|\n'.format(*benchmark_info)
+        for benchmark_info in sorted(
+            benchmark_infos, key=lambda info: info.benchmark
+        )
+    )
 
 
 def main():
     """Print a markdown table with important data on each
     benchmark."""
     if len(sys.argv) != 2:
-        print('Usage {} <coverage_builds_directory>'.format(sys.argv[0]))
+        print(f'Usage {sys.argv[0]} <coverage_builds_directory>')
         return 1
     coverage_builds_dir = sys.argv[1]
     infos = get_benchmark_infos(coverage_builds_dir)

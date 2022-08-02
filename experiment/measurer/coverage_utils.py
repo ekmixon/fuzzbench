@@ -184,7 +184,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
 
 def get_coverage_archive_name(benchmark):
     """Gets the archive name for |benchmark|."""
-    return 'coverage-build-%s.tar.gz' % benchmark
+    return f'coverage-build-{benchmark}.tar.gz'
 
 
 def get_profdata_file_name(trial_id):
@@ -219,8 +219,7 @@ def merge_profdata_files(src_files, dst_file):
     command = ['llvm-profdata', 'merge', '-sparse']
     command.extend(src_files)
     command.extend(['-o', dst_file])
-    result = new_process.execute(command, expect_zero=False)
-    return result
+    return new_process.execute(command, expect_zero=False)
 
 
 def get_coverage_infomation(coverage_summary_file):
@@ -256,10 +255,16 @@ def generate_json_summary(coverage_binary,
     """Generates the json summary file from |coverage_binary|
     and |profdata_file|."""
     command = [
-        'llvm-cov', 'export', '-format=text', '-num-threads=1',
-        '-region-coverage-gt=0', '-skip-expansions', coverage_binary,
-        '-instr-profile=%s' % profdata_file
+        'llvm-cov',
+        'export',
+        '-format=text',
+        '-num-threads=1',
+        '-region-coverage-gt=0',
+        '-skip-expansions',
+        coverage_binary,
+        f'-instr-profile={profdata_file}',
     ]
+
 
     if summary_only:
         command.append('-summary-only')
@@ -287,10 +292,12 @@ def extract_covered_regions_from_summary_json(summary_json_file):
         # The number of index 5 represents the file number.
         file_index = 5
         for function_data in functions_data:
-            for region in function_data['regions']:
-                if region[hit_index] != 0 and region[type_index] == 0:
-                    covered_regions.append(region[:hit_index] +
-                                           region[file_index:])
+            covered_regions.extend(
+                region[:hit_index] + region[file_index:]
+                for region in function_data['regions']
+                if region[hit_index] != 0 and region[type_index] == 0
+            )
+
     except Exception:  # pylint: disable=broad-except
         logger.error('Coverage summary json file defective or missing.')
     return covered_regions

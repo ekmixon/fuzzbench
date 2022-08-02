@@ -73,10 +73,7 @@ def get_fuzz_target_binary(search_directory: str,
     """Return target binary path."""
     if fuzz_target_name:
         fuzz_target_binary = os.path.join(search_directory, fuzz_target_name)
-        if os.path.exists(fuzz_target_binary):
-            return fuzz_target_binary
-        return None
-
+        return fuzz_target_binary if os.path.exists(fuzz_target_binary) else None
     default_fuzz_target_binary = os.path.join(search_directory,
                                               DEFAULT_FUZZ_TARGET_NAME)
     if os.path.exists(default_fuzz_target_binary):
@@ -117,7 +114,7 @@ def validate(fuzzer):
         return False
 
     # Try importing the fuzzer module.
-    module_name = 'fuzzers.{}.fuzzer'.format(fuzzer)
+    module_name = f'fuzzers.{fuzzer}.fuzzer'
     try:
         importlib.import_module(module_name)
         return True

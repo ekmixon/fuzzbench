@@ -65,27 +65,33 @@ def create_instance(instance_name: str,
         instance_name,
         '--image-family=cos-stable',
         '--image-project=cos-cloud',
-        '--zone=%s' % config['cloud_compute_zone'],
+        f"--zone={config['cloud_compute_zone']}",
         '--scopes=cloud-platform',
     ]
+
     if instance_type == InstanceType.DISPATCHER:
-        command.extend([
-            '--machine-type=%s' % DISPATCHER_MACHINE_TYPE,
-            '--boot-disk-size=%s' % DISPATCHER_BOOT_DISK_SIZE,
-            '--boot-disk-type=%s' % DISPATCHER_BOOT_DISK_TYPE,
-        ])
+        command.extend(
+            [
+                f'--machine-type={DISPATCHER_MACHINE_TYPE}',
+                f'--boot-disk-size={DISPATCHER_BOOT_DISK_SIZE}',
+                f'--boot-disk-type={DISPATCHER_BOOT_DISK_TYPE}',
+            ]
+        )
+
     else:
-        command.extend([
-            '--no-address',
-            '--machine-type=%s' % RUNNER_MACHINE_TYPE,
-            '--boot-disk-size=%s' % RUNNER_BOOT_DISK_SIZE,
-        ])
+        command.extend(
+            [
+                '--no-address',
+                f'--machine-type={RUNNER_MACHINE_TYPE}',
+                f'--boot-disk-size={RUNNER_BOOT_DISK_SIZE}',
+            ]
+        )
+
 
     if preemptible:
         command.append('--preemptible')
     if startup_script:
-        command.extend(
-            ['--metadata-from-file', 'startup-script=' + startup_script])
+        command.extend(['--metadata-from-file', f'startup-script={startup_script}'])
 
     result = new_process.execute(command, expect_zero=False, **kwargs)
     if result.retcode == 0:
@@ -133,14 +139,25 @@ def create_instance_template(template_name, docker_image, env, project, zone):
     # there is no public API for handling some docker related functionality that
     # we need.
     command = [
-        'gcloud', 'compute', '--project', project, 'instance-templates',
-        'create-with-container', template_name, '--no-address',
-        '--image-family=cos-stable', '--image-project=cos-cloud',
-        '--region=%s' % zone, '--scopes=cloud-platform',
-        '--machine-type=%s' % MEASURER_WORKER_MACHINE_TYPE,
-        '--boot-disk-size=%s' % MEASURER_WORKER_BOOT_DISK_SIZE, '--preemptible',
-        '--container-image', docker_image
+        'gcloud',
+        'compute',
+        '--project',
+        project,
+        'instance-templates',
+        'create-with-container',
+        template_name,
+        '--no-address',
+        '--image-family=cos-stable',
+        '--image-project=cos-cloud',
+        f'--region={zone}',
+        '--scopes=cloud-platform',
+        f'--machine-type={MEASURER_WORKER_MACHINE_TYPE}',
+        f'--boot-disk-size={MEASURER_WORKER_BOOT_DISK_SIZE}',
+        '--preemptible',
+        '--container-image',
+        docker_image,
     ]
+
     for item in env.items():
         command.extend(['--container-env', '%s=%s' % item])
     new_process.execute(command)

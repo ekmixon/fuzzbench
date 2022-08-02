@@ -22,7 +22,7 @@ class EmptyDataError(ValueError):
 
 def underline_row(row):
     """Add thick bottom border to row."""
-    return ['border-bottom: 3px solid black' for v in row]
+    return ['border-bottom: 3px solid black' for _ in row]
 
 
 def validate_data(experiment_df):
@@ -40,10 +40,8 @@ def validate_data(experiment_df):
         'time',
         'edges_covered',
     }
-    missing_columns = expected_columns.difference(experiment_df.columns)
-    if missing_columns:
-        raise ValueError(
-            'Missing columns in experiment data: {}'.format(missing_columns))
+    if missing_columns := expected_columns.difference(experiment_df.columns):
+        raise ValueError(f'Missing columns in experiment data: {missing_columns}')
 
 
 def drop_uninteresting_columns(experiment_df):
@@ -129,8 +127,7 @@ def add_bugs_covered_column(experiment_df):
     df['bugs_cumsum'] = df.groupby(grouping2)['firsts'].transform('cumsum')
     df['bugs_covered'] = (
         df.groupby(grouping3)['bugs_cumsum'].transform('max').astype(int))
-    new_df = df.drop(columns=['bugs_cumsum', 'firsts'])
-    return new_df
+    return df.drop(columns=['bugs_cumsum', 'firsts'])
 
 
 # Creating "snapshots" (see README.md for definition).
@@ -156,8 +153,7 @@ def get_benchmark_snapshot(benchmark_df,
     criteria = trials_running_at_time >= threshold * num_trials
     ok_times = trials_running_at_time[criteria]
     latest_ok_time = ok_times.index.max()
-    benchmark_snapshot_df = benchmark_df[benchmark_df.time == latest_ok_time]
-    return benchmark_snapshot_df
+    return benchmark_df[benchmark_df.time == latest_ok_time]
 
 
 _DEFAULT_FUZZER_SAMPLE_NUM_THRESHOLD = 0.8
@@ -211,8 +207,7 @@ def experiment_summary(experiment_snapshots_df):
     |benchmark|| < benchmark level summary >
     """
     groups = experiment_snapshots_df.groupby('benchmark')
-    summaries = groups.apply(benchmark_summary)
-    return summaries
+    return groups.apply(benchmark_summary)
 
 
 # Per-benchmark fuzzer ranking options.
@@ -237,7 +232,7 @@ def benchmark_rank_by_median(benchmark_snapshot_df, key='edges_covered'):
 def benchmark_rank_by_percent(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on median (normalized/%) coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
-    max_key = "{}_percent_max".format(key)
+    max_key = f"{key}_percent_max"
     medians = benchmark_snapshot_df.groupby('fuzzer')[max_key].median()
     return medians.sort_values(ascending=False)
 
@@ -304,8 +299,7 @@ def experiment_pivot_table(experiment_snapshots_df,
     benchmark_blocks = experiment_snapshots_df.groupby('benchmark')
     groups_ranked = benchmark_blocks.apply(benchmark_level_ranking_function)
     already_unstacked = groups_ranked.index.names == ['benchmark']
-    pivot_df = groups_ranked if already_unstacked else groups_ranked.unstack()
-    return pivot_df
+    return groups_ranked if already_unstacked else groups_ranked.unstack()
 
 
 def experiment_rank_by_average_rank(experiment_pivot_df):
@@ -367,11 +361,11 @@ def add_relative_columns(experiment_df):
     for key in ['edges_covered', 'bugs_covered']:
         if key not in df.columns:
             continue
-        new_col = "{}_percent_max".format(key)
+        new_col = f"{key}_percent_max"
         df[new_col] = df[key] / df.groupby('benchmark')[key].transform(
             'max') * 100.0
 
-        new_col = "{}_percent_fmax".format(key)
+        new_col = f"{key}_percent_fmax"
         df[new_col] = df[key] / df.groupby(['benchmark', 'fuzzer'
                                            ])[key].transform('max') * 100
     return df

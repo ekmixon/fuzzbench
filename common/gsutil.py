@@ -40,12 +40,11 @@ def cp(source, destination, recursive=False, expect_zero=True, parallel=False): 
     return gsutil_command(command, expect_zero=expect_zero, parallel=parallel)
 
 
-def ls(path, must_exist=True):  # pylint: disable=invalid-name
+def ls(path, must_exist=True):    # pylint: disable=invalid-name
     """Executes gsutil's "ls" command on |path|. If |must_exist| is True and the
     command fails then this function will raise a subprocess.CalledError."""
     command = ['ls', path]
-    process_result = gsutil_command(command, expect_zero=must_exist)
-    return process_result
+    return gsutil_command(command, expect_zero=must_exist)
 
 
 def rm(path, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name

@@ -31,8 +31,10 @@ def _get_benchmark_fuzz_target(benchmarks):
     for benchmark in benchmarks:
         benchmark_vars = yaml_utils.read(
             os.path.join(BENCHMARK_DIR, benchmark, 'benchmark.yaml'))
-        variables += (benchmark + '-fuzz-target=' +
-                      benchmark_vars['fuzz_target'] + '\n')
+        variables += (
+            f'{benchmark}-fuzz-target=' + benchmark_vars['fuzz_target']
+        ) + '\n'
+
         variables += '\n'
     return variables
 
@@ -48,11 +50,10 @@ def _get_makefile_run_template(image):
         run_types.append('repro-bugs')
 
     for run_type in run_types:
+        section += f'{run_type}-{fuzzer}-{benchmark}: '
         if run_type == 'debug-builder':
-            section += f'{run_type}-{fuzzer}-{benchmark}: '
             section += f'.{fuzzer}-{benchmark}-builder-debug\n'
         else:
-            section += f'{run_type}-{fuzzer}-{benchmark}: '
             section += f'.{fuzzer}-{benchmark}-runner\n'
 
         section += f'\
@@ -102,17 +103,16 @@ def _get_makefile_run_template(image):
 
 def get_rules_for_image(name, image):
     """Returns makefile section for |image|."""
-    if not ('base-' in name or 'dispatcher-' in name or name == 'worker'):
-        section = '.'
-    else:
-        section = ''
-    section += name + ':'
+    section = (
+        ''
+        if ('base-' in name or 'dispatcher-' in name or name == 'worker')
+        else '.'
+    )
+
+    section += f'{name}:'
     if 'depends_on' in image:
         for dep in image['depends_on']:
-            if 'base' in dep:
-                section += ' ' + dep
-            else:
-                section += ' .' + dep
+            section += f' {dep}' if 'base' in dep else f' .{dep}'
     section += '\n'
     if 'base-' in name:
         section += '\tdocker pull ubuntu:xenial\n'
@@ -131,7 +131,7 @@ def get_rules_for_image(name, image):
     section += '\n'
 
     # Print run, debug, test-run and debug-builder rules if image is a runner.
-    if 'runner' in name and not ('intermediate' in name or 'base' in name):
+    if 'runner' in name and 'intermediate' not in name and 'base' not in name:
         section += _get_makefile_run_template(image)
     return section
 

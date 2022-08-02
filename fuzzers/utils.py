@@ -135,11 +135,11 @@ def get_dictionary_path(target_binary):
         # Don't use dictionaries if experiment specifies not to.
         return None
 
-    dictionary_path = target_binary + '.dict'
+    dictionary_path = f'{target_binary}.dict'
     if os.path.exists(dictionary_path):
         return dictionary_path
 
-    options_file_path = target_binary + '.options'
+    options_file_path = f'{target_binary}.options'
     if not os.path.exists(options_file_path):
         return None
 

@@ -75,8 +75,7 @@ class TestGsutilRsync:
     def test_no_flag(self, kwarg_for_rsync, flag):
         """Tests that rsync works as intended when caller specifies not
         to use specific flags."""
-        kwargs_for_rsync = {}
-        kwargs_for_rsync[kwarg_for_rsync] = False
+        kwargs_for_rsync = {kwarg_for_rsync: False}
         with mock.patch(
                 'common.gsutil.gsutil_command') as mocked_gsutil_command:
             gsutil.rsync(self.SRC, self.DST, **kwargs_for_rsync)

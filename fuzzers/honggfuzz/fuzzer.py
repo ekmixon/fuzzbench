@@ -60,8 +60,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         '--crashdir',
         crashes_dir,
     ]
-    dictionary_path = utils.get_dictionary_path(target_binary)
-    if dictionary_path:
+    if dictionary_path := utils.get_dictionary_path(target_binary):
         command.extend(['--dict', dictionary_path])
     command.extend(['--', target_binary])
 

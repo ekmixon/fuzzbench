@@ -107,9 +107,7 @@ def test_record_stats(trial_runner, fuzzer_module):
 
     stats_file = os.path.join(trial_runner.results_dir, 'stats-%d.json' % cycle)
     trial_runner.record_stats()
-    with open(stats_file) as file_handle:
-        stats_file_contents = file_handle.read()
-
+    stats_file_contents = pathlib.Path(stats_file).read_text()
     assert stats_file_contents == FuzzerAModule.DEFAULT_STATS
 
 
@@ -349,9 +347,14 @@ class TestIntegrationRunner:
         benchmark = 'MultipleConstraintsOnSmallInputTest'
         test_experiment_bucket = os.environ['TEST_EXPERIMENT_FILESTORE']
         experiment = 'integration-test-experiment'
-        gcs_directory = posixpath.join(test_experiment_bucket, experiment,
-                                       'experiment-folders',
-                                       '%s-%s' % (benchmark, fuzzer), 'trial-1')
+        gcs_directory = posixpath.join(
+            test_experiment_bucket,
+            experiment,
+            'experiment-folders',
+            f'{benchmark}-{fuzzer}',
+            'trial-1',
+        )
+
         filestore_utils.rm(gcs_directory, force=True)
         # Add fuzzer directory to make it easy to run fuzzer.py in local
         # configuration.

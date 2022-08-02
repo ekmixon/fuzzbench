@@ -14,6 +14,7 @@
 # limitations under the License.
 """Runs fuzzer for trial."""
 
+
 from collections import namedtuple
 import importlib
 import json
@@ -49,17 +50,15 @@ FUZZ_TARGET_DIR = '/out'
 # This is an optimization to sync corpora only when it is needed. These files
 # are temporary files generated during fuzzer runtime and are not related to
 # the actual corpora.
-EXCLUDE_PATHS = set([
-    # AFL excludes.
+EXCLUDE_PATHS = {
     '.cur_input',
     '.state',
     'fuzz_bitmap',
     'fuzzer_stats',
     'plot_data',
-
-    # QSYM excludes.
     'bitmap',
-])
+}
+
 
 CORPUS_ELEMENT_BYTES_LIMIT = 1 * 1024 * 1024
 SEED_CORPUS_ARCHIVE_SUFFIX = '_seed_corpus.zip'
@@ -120,8 +119,7 @@ def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):
     corpus directory if it exists. Copied from unpack_seed_corpus in
     engine_common.py in ClusterFuzz.
     """
-    oss_fuzz_corpus = environment.get('OSS_FUZZ_CORPUS')
-    if oss_fuzz_corpus:
+    if oss_fuzz_corpus := environment.get('OSS_FUZZ_CORPUS'):
         benchmark = environment.get('BENCHMARK')
         corpus_archive_filename = f'{benchmark}.zip'
         oss_fuzz_corpus_archive_path = posixpath.join(
@@ -447,8 +445,7 @@ def get_fuzzer_module(fuzzer):
     we can mock the module because importing modules makes hard to undo changes
     to the python process."""
     fuzzer_module_name = 'fuzzers.{fuzzer}.fuzzer'.format(fuzzer=fuzzer)
-    fuzzer_module = importlib.import_module(fuzzer_module_name)
-    return fuzzer_module
+    return importlib.import_module(fuzzer_module_name)
 
 
 def archive_directories(directories, archive_path):
@@ -472,7 +469,7 @@ def tar_directory(directory, tar):
                                    os.path.relpath(file_path, directory))
             try:
                 tar.add(file_path, arcname=arcname)
-            except (FileNotFoundError, OSError):
+            except OSError:
                 # We will get these errors if files or directories are being
                 # deleted from |directory| as we archive it. Don't bother
                 # rescanning the directory, new files will be archived in the
@@ -514,9 +511,7 @@ def main():
             'trial_id': str(environment.get('TRIAL_ID')),
         })
     experiment_main()
-    if fuzzer_errored_out:
-        return 1
-    return 0
+    return 1 if fuzzer_errored_out else 0
 
 
 if __name__ == '__main__':

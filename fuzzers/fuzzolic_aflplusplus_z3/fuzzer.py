@@ -64,8 +64,7 @@ def build():
     uninstrumented_outdir = get_uninstrumented_outdir(os.environ['OUT'])
     os.mkdir(uninstrumented_outdir)
     new_env['OUT'] = uninstrumented_outdir
-    fuzz_target = os.getenv('FUZZ_TARGET')
-    if fuzz_target:
+    if fuzz_target := os.getenv('FUZZ_TARGET'):
         targ_name = os.path.basename(fuzz_target)
         new_env['FUZZ_TARGET'] = os.path.join(uninstrumented_outdir, targ_name)
     print('[build] Re-building benchmark for uninstrumented fuzzing target')

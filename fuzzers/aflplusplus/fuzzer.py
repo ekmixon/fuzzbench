@@ -31,7 +31,7 @@ def get_uninstrumented_build_directory(target_directory):
     return os.path.join(target_directory, 'uninstrumented')
 
 
-def build(*args):  # pylint: disable=too-many-branches,too-many-statements
+def build(*args):    # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
@@ -58,7 +58,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'lto' in build_modes:
         os.environ['CC'] = '/afl/afl-clang-lto'
         os.environ['CXX'] = '/afl/afl-clang-lto++'
-        edge_file = build_directory + '/aflpp_edges.txt'
+        edge_file = f'{build_directory}/aflpp_edges.txt'
         os.environ['AFL_LLVM_DOCUMENT_IDS'] = edge_file
         if os.path.isfile('/usr/local/bin/llvm-ranlib-13'):
             os.environ['RANLIB'] = 'llvm-ranlib-13'
@@ -106,7 +106,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['AFL_LLVM_MAP_ADDR'] = '0x10000'
     # Generate an extra dictionary.
     if 'dict2file' in build_modes or 'native' in build_modes:
-        os.environ['AFL_LLVM_DICT2FILE'] = build_directory + '/afl++.dict'
+        os.environ['AFL_LLVM_DICT2FILE'] = f'{build_directory}/afl++.dict'
     # Enable context sentitivity for LLVM mode (non LTO only)
     if 'ctx' in build_modes:
         os.environ['AFL_LLVM_CTX'] = '1'
@@ -178,8 +178,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         cmplog_build_directory = get_cmplog_build_directory(build_directory)
         os.mkdir(cmplog_build_directory)
         new_env['OUT'] = cmplog_build_directory
-        fuzz_target = os.getenv('FUZZ_TARGET')
-        if fuzz_target:
+        if fuzz_target := os.getenv('FUZZ_TARGET'):
             new_env['FUZZ_TARGET'] = os.path.join(cmplog_build_directory,
                                                   os.path.basename(fuzz_target))
 
@@ -207,8 +206,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         # For CmpLog build, set the OUT and FUZZ_TARGET environment
         # variable to point to the new CmpLog build directory.
         new_env['OUT'] = symcc_build_directory
-        fuzz_target = os.getenv('FUZZ_TARGET')
-        if fuzz_target:
+        if fuzz_target := os.getenv('FUZZ_TARGET'):
             new_env['FUZZ_TARGET'] = os.path.join(symcc_build_directory,
                                                   os.path.basename(fuzz_target))
 

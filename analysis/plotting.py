@@ -34,10 +34,9 @@ def _formatted_hour_min(seconds):
     """
     time_string = ''
     hours = int(seconds / 60 / 60)
-    minutes = int(seconds / 60) % 60
     if hours:
         time_string += '%dh' % hours
-    if minutes:
+    if minutes := int(seconds / 60) % 60:
         if hours:
             time_string += ':'
         time_string += '%dm' % minutes
@@ -260,7 +259,7 @@ class Plotter:
             sns.stripplot(**common_args, size=3, color="black", alpha=0.6)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'region')
+        ylabel = f"Reached {'bug' if bugs else 'region'} coverage"
         axes.set(ylabel=ylabel)
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
@@ -339,7 +338,7 @@ class Plotter:
                            ax=axes)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'region')
+        ylabel = f"Reached {'bug' if bugs else 'region'} coverage"
         axes.set(ylabel=ylabel)
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),

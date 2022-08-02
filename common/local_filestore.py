@@ -36,14 +36,13 @@ def cp(  # pylint: disable=invalid-name
     return new_process.execute(command, expect_zero=expect_zero)
 
 
-def ls(path, must_exist=True):  # pylint: disable=invalid-name
+def ls(path, must_exist=True):    # pylint: disable=invalid-name
     """Executes "ls" command for |path|. If |must_exist| is True then it can
     raise subprocess.CalledProcessError."""
     # Add '-1' (i.e., number one) to behave like `gsutil.ls` (i.e., one filename
     # per line).
     command = ['ls', '-1', path]
-    process_result = new_process.execute(command, expect_zero=must_exist)
-    return process_result
+    return new_process.execute(command, expect_zero=must_exist)
 
 
 def rm(  # pylint: disable=invalid-name
@@ -69,7 +68,7 @@ def rsync(  # pylint: disable=too-many-arguments
         recursive=True,
         gsutil_options=None,  # pylint: disable=unused-argument
         options=None,
-        parallel=False):  # pylint: disable=unused-argument
+        parallel=False):    # pylint: disable=unused-argument
     """Does local_filestore rsync from |source| to |destination| using useful
     defaults that can be overriden."""
     # Add check to behave like `gsutil.rsync`.
@@ -88,7 +87,7 @@ def rsync(  # pylint: disable=too-many-arguments
         command.extend(options)
     # Add '/' at the end of `source` to behave like `gsutil.rsync`.
     if source[-1] != '/':
-        source = source + '/'
+        source = f'{source}/'
     command.extend([source, destination])
     return new_process.execute(command, expect_zero=True)
 

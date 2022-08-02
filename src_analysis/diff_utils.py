@@ -37,14 +37,18 @@ def get_changed_files(commit_name: str = 'origin...') -> List[str]:
     """Return a list of absolute paths of files changed in this git branch."""
     uncommitted_diff_args = ['--name-only', 'HEAD']
     output = execute_git_diff(uncommitted_diff_args)
-    uncommitted_changed_files = set(
-        os.path.abspath(path) for path in output if os.path.isfile(path))
+    uncommitted_changed_files = {
+        os.path.abspath(path) for path in output if os.path.isfile(path)
+    }
+
 
     committed_diff_command = ['--name-only', commit_name]
     try:
         output = execute_git_diff(committed_diff_command)
-        committed_changed_files = set(
-            os.path.abspath(path) for path in output if os.path.isfile(path))
+        committed_changed_files = {
+            os.path.abspath(path) for path in output if os.path.isfile(path)
+        }
+
         return list(committed_changed_files.union(uncommitted_changed_files))
     except subprocess.CalledProcessError:
         # This probably won't happen to anyone. It can happen if your copy

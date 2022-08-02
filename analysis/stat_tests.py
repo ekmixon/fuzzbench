@@ -107,10 +107,12 @@ def anova_posthoc_tests(benchmark_snapshot_df, key):
     }
     p_adjust = 'holm'
 
-    posthoc_tests = {}
-    posthoc_tests['student'] = sp.posthoc_ttest(**common_args,
-                                                equal_var=False,
-                                                p_adjust=p_adjust)
+    posthoc_tests = {
+        'student': sp.posthoc_ttest(
+            **common_args, equal_var=False, p_adjust=p_adjust
+        )
+    }
+
     posthoc_tests['turkey'] = sp.posthoc_tukey(**common_args)
     return posthoc_tests
 
@@ -137,9 +139,12 @@ def kruskal_posthoc_tests(benchmark_snapshot_df, key):
     }
     p_adjust = 'holm'
 
-    posthoc_tests = {}
-    posthoc_tests['mann_whitney'] = sp.posthoc_mannwhitney(**common_args,
-                                                           p_adjust=p_adjust)
+    posthoc_tests = {
+        'mann_whitney': sp.posthoc_mannwhitney(
+            **common_args, p_adjust=p_adjust
+        )
+    }
+
     posthoc_tests['conover'] = sp.posthoc_conover(**common_args,
                                                   p_adjust=p_adjust)
     posthoc_tests['wilcoxon'] = sp.posthoc_wilcoxon(**common_args,
@@ -162,8 +167,7 @@ def friedman_posthoc_tests(experiment_pivot_df):
 
     Results should considered only if Friedman test rejects null hypothesis.
     """
-    posthoc_tests = {}
-    posthoc_tests['conover'] = sp.posthoc_conover_friedman(experiment_pivot_df)
+    posthoc_tests = {'conover': sp.posthoc_conover_friedman(experiment_pivot_df)}
     posthoc_tests['nemenyi'] = sp.posthoc_nemenyi_friedman(experiment_pivot_df)
     return posthoc_tests
 
@@ -193,16 +197,10 @@ def a12(measurements_x, measurements_y):
     y_array = np.asarray(measurements_y)
     x_size, y_size = x_array.size, y_array.size
     ranked = ss.rankdata(np.concatenate((x_array, y_array)))
-    rank_x = ranked[0:x_size]  # get the x-ranks
+    rank_x = ranked[:x_size]
 
     rank_x_sum = rank_x.sum()
-    # A = (R1/n1 - (n1+1)/2)/n2 # formula (14) in Vargha and Delaney, 2000
-    # The formula to compute A has been transformed to minimize accuracy errors.
-    # See: http://mtorchiano.wordpress.com/2014/05/19/effect-size-of-r-precision/
-
-    a12_measure = (2 * rank_x_sum - x_size * (x_size + 1)) / (
-        2 * y_size * x_size)  # equivalent formula to avoid accuracy errors
-    return a12_measure
+    return (2 * rank_x_sum - x_size * (x_size + 1)) / (2 * y_size * x_size)
 
 
 def benchmark_a12(benchmark_snapshot_df, f1_name, f2_name, key='edges_covered'):

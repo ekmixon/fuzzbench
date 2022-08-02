@@ -64,8 +64,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         '-t',
         '1000+',  # Use same default 1 sec timeout, but add '+' to skip hangs.
     ]
-    dictionary_path = utils.get_dictionary_path(target_binary)
-    if dictionary_path:
+    if dictionary_path := utils.get_dictionary_path(target_binary):
         command.extend(['-x', dictionary_path])
     command.extend(['--', target_binary])
 

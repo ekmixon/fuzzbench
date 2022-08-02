@@ -124,13 +124,12 @@ def test_rsync_options(fs):  # pylint: disable=invalid-name
 
 @pytest.mark.parametrize(('kwarg_for_rsync', 'flag'), [('delete', '--delete'),
                                                        ('recursive', '-r')])
-def test_rsync_no_flag(kwarg_for_rsync, flag, fs):  # pylint: disable=invalid-name
+def test_rsync_no_flag(kwarg_for_rsync, flag, fs):    # pylint: disable=invalid-name
     """Tests that rsync works as intended when caller specifies not
     to use specific flags."""
     fs.create_dir(SRC)
     fs.create_dir(DST)
-    kwargs_for_rsync = {}
-    kwargs_for_rsync[kwarg_for_rsync] = False
+    kwargs_for_rsync = {kwarg_for_rsync: False}
     with mock.patch('common.new_process.execute') as mocked_execute:
         local_filestore.rsync(SRC, DST, **kwargs_for_rsync)
     assert flag not in mocked_execute.call_args_list[0][0][0]

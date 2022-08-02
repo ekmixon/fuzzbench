@@ -99,13 +99,14 @@ def measure_loop(experiment: str, max_total_time: int):
                 # races.
                 all_trials_ended = scheduler.all_trials_ended(experiment)
 
-                if not measure_all_trials(experiment, max_total_time, pool, q):
-                    # We didn't measure any trials.
-                    if all_trials_ended:
-                        # There are no trials producing snapshots to measure.
-                        # Given that we couldn't measure any snapshots, we won't
-                        # be able to measure any the future, so stop now.
-                        break
+                if (
+                    not measure_all_trials(experiment, max_total_time, pool, q)
+                    and all_trials_ended
+                ):
+                    # There are no trials producing snapshots to measure.
+                    # Given that we couldn't measure any snapshots, we won't
+                    # be able to measure any the future, so stop now.
+                    break
             except Exception:  # pylint: disable=broad-except
                 logger.error('Error occurred during measuring.')
 
@@ -412,8 +413,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             coverage_data = coverage_info["data"][0]
             summary_data = coverage_data["totals"]
             regions_coverage_data = summary_data["regions"]
-            regions_covered = regions_coverage_data["covered"]
-            return regions_covered
+            return regions_coverage_data["covered"]
         except Exception:  # pylint: disable=broad-except
             self.logger.error(
                 'Coverage summary json file defective or missing.')
@@ -462,15 +462,15 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
                                         expect_zero=False)
             return result.retcode == 0
 
-        if not os.path.exists(self.unchanged_cycles_path):
-            if not copy_unchanged_cycles_file():
-                return False
+        if (
+            not os.path.exists(self.unchanged_cycles_path)
+            and not copy_unchanged_cycles_file()
+        ):
+            return False
 
         def get_unchanged_cycles():
-            return [
-                int(cycle) for cycle in filesystem.read(
-                    self.unchanged_cycles_path).splitlines()
-            ]
+            return list(filesystem.read(self.unchanged_cycles_path).splitlines())
+
 
         unchanged_cycles = get_unchanged_cycles()
         if cycle in unchanged_cycles:
@@ -555,9 +555,11 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
     def get_measured_files(self):
         """Returns a the set of files that have been measured for this
         snapshot's trials."""
-        if not os.path.exists(self.measured_files_path):
-            return set()
-        return set(filesystem.read(self.measured_files_path).splitlines())
+        return (
+            set(filesystem.read(self.measured_files_path).splitlines())
+            if os.path.exists(self.measured_files_path)
+            else set()
+        )
 
     def get_fuzzer_stats(self, cycle):
         """Get the fuzzer stats for |cycle|."""
@@ -595,12 +597,15 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
     # Add 1 to ensure we measure the last cycle.
     for cycle in range(min_cycle, max_cycle + 1):
         try:
-            snapshot = measure_snapshot_coverage(measure_req.fuzzer,
-                                                 measure_req.benchmark,
-                                                 measure_req.trial_id, cycle)
-            if not snapshot:
+            if snapshot := measure_snapshot_coverage(
+                measure_req.fuzzer,
+                measure_req.benchmark,
+                measure_req.trial_id,
+                cycle,
+            ):
+                q.put(snapshot)
+            else:
                 break
-            q.put(snapshot)
         except Exception:  # pylint: disable=broad-except
             logger.error('Error measuring cycle.',
                          extras={
@@ -708,7 +713,7 @@ def set_up_coverage_binary(benchmark):
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     benchmark_coverage_binary_dir = coverage_binaries_dir / benchmark
     filesystem.create_directory(benchmark_coverage_binary_dir)
-    archive_name = 'coverage-build-%s.tar.gz' % benchmark
+    archive_name = f'coverage-build-{benchmark}.tar.gz'
     archive_filestore_path = exp_path.filestore(coverage_binaries_dir /
                                                 archive_name)
     filestore_utils.cp(archive_filestore_path,
